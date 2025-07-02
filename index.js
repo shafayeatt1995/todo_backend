@@ -37,6 +37,6 @@ app.get("/", (req, res) => {
 });
 app.use("/", require("./routes"));
 
-app.listen(port, () => {
+app.listen(port, "0.0.0.0", () => {
   console.log(`running on http://localhost:${port}`);
 });
