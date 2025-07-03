@@ -3,6 +3,11 @@ const Schema = mongoose.Schema;
 
 const TodoSchema = new Schema(
   {
+    businessID: {
+      type: Schema.Types.ObjectId,
+      ref: "Business",
+      required: true,
+    },
     user: { type: String, required: true },
     title: { type: String, required: true, trim: true },
     description: { type: String, required: true, trim: true },

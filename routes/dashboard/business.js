@@ -1,7 +1,7 @@
 const express = require("express");
 const mongoose = require("mongoose");
 const { Business, User } = require("../../models");
-const { paginate, objectID, imageUpload, utapi } = require("../../utils");
+const { paginate, objectID } = require("../../utils");
 const { validation } = require("../../validation");
 const { businessCreateVal } = require("../../validation/business");
 const router = express.Router();
@@ -63,7 +63,7 @@ router.post("/fetch", async (req, res) => {
 router.post("/batch-delete", async (req, res) => {
   try {
     const { ids } = req.body;
-    // await Business.deleteMany({ _id: { $in: ids } });
+    await Business.deleteMany({ _id: { $in: ids } });
     return res.send({ success: true });
   } catch (error) {
     console.error(error);
@@ -73,11 +73,6 @@ router.post("/batch-delete", async (req, res) => {
 router.post("/delete", async (req, res) => {
   try {
     const { business } = req.body;
-    const findBusiness = await Business.findOne({
-      _id: business._id,
-      image: { $exists: true },
-    }).lean();
-    if (findBusiness?.image) await utapi.deleteFiles([findBusiness.image.key]);
     await Business.deleteOne({ _id: business._id });
     return res.send({ success: true });
   } catch (error) {
@@ -88,16 +83,8 @@ router.post("/delete", async (req, res) => {
 router.post("/add", businessCreateVal, validation, async (req, res) => {
   try {
     const { name: refName } = req.user;
-    const { name, exp } = req.body;
-    let image = null;
-    if (req.files?.image?.data) {
-      const upload = await imageUpload(req.files?.image?.data);
-      const { key, url } = upload;
-      image = { key, url };
-    }
-    const body = { name, exp: new Date(exp), refName };
-    if (image) body.image = image;
-    await Business.create(body);
+    const { name, expire } = req.body;
+    await Business.create({ name, refName, exp: new Date(expire) });
     return res.send({ success: true });
   } catch (error) {
     console.error(error);
@@ -106,22 +93,8 @@ router.post("/add", businessCreateVal, validation, async (req, res) => {
 });
 router.post("/edit", businessCreateVal, validation, async (req, res) => {
   try {
-    const { name, exp, _id } = req.body;
-    let image = null;
-    if (req.files?.image?.data) {
-      const business = await Business.findOne({
-        _id,
-        image: { $exists: true },
-      }).lean();
-      if (business?.image) await utapi.deleteFiles([business.image.key]);
-
-      const upload = await imageUpload(req.files?.image?.data);
-      const { key, url } = upload;
-      image = { key, url };
-    }
-    const body = { name, exp: new Date(exp) };
-    if (image) body.image = image;
-    await Business.updateOne({ _id }, body);
+    const { name, expire, _id } = req.body;
+    await Business.updateOne({ _id }, { name, exp: new Date(expire) });
     return res.send({ success: true });
   } catch (error) {
     console.error(error);
@@ -157,6 +130,7 @@ router.post("/update-user", async (req, res) => {
 
   try {
     const { business, type, users } = req.body;
+
     if (
       !business?._id ||
       !["owner", "staff"].includes(type) ||
@@ -166,20 +140,21 @@ router.post("/update-user", async (req, res) => {
     }
 
     const userIds = users.map(({ _id }) => objectID(_id));
+
     const updateField =
       type === "owner" ? { ownerIDs: userIds } : { staffIDs: userIds };
-    const userBody = {
-      businessID: objectID(business._id),
-      type,
-    };
-    if (type === "staff") userBody.permissions = [];
 
     await Business.updateOne({ _id: objectID(business._id) }, updateField, {
       session,
     });
     await User.updateMany(
       { _id: { $in: userIds } },
-      { $set: userBody },
+      {
+        $set: {
+          businessID: objectID(business._id),
+          type,
+        },
+      },
       { session }
     );
 
