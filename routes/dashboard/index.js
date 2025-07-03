@@ -13,6 +13,7 @@ const {
 } = require("../../utils");
 const sharp = require("sharp");
 const { todoCreateVal } = require("../../validation/todo");
+const { admin } = require("../../utils/firebaseAdmin");
 const router = express.Router();
 
 router.get("/user", async (req, res) => {
@@ -50,7 +51,6 @@ router.put("/user", userEditVal, validation, async (req, res) => {
     const { name, id, password, _id } = req.body;
     const body = { name, id };
     if (password) body.password = bcrypt.hashSync(password, 10);
-    console.log(body);
     await User.updateOne({ _id }, body);
 
     return res.send({ success: true });
@@ -63,12 +63,10 @@ router.post("/user/toggle-suspend", async (req, res) => {
   try {
     const { _id } = req.user;
     const { user } = req.body;
-    console.log(user._id, _id);
-    const anik = await User.updateOne(
+    await User.updateOne(
       { $and: [{ _id: user._id }, { _id: { $ne: _id } }] },
       toggle("suspended")
     );
-    console.log(anik);
     return res.send({ success: true });
   } catch (error) {
     console.error(error);
@@ -130,11 +128,27 @@ router.post("/todo", todoCreateVal, validation, async (req, res) => {
       keyList = key;
     }
 
-    const { name } = req.user;
+    const { name, _id } = req.user;
     const { title, description } = req.body;
     const payload = { title, description, user: name };
     if (image) payload.image = image;
     await Todo.create(payload);
+
+    // 🔔 Send push notification to all users except the sender
+    const users = await User.find({ fcmToken: { $exists: true } }).lean();
+
+    const tokens = users.map((u) => u.fcmToken);
+
+    if (tokens.length > 0) {
+      await admin.messaging().sendToDevice(tokens, {
+        notification: {
+          title: `🆕 New Todo Added by ${name}`,
+          body: `${title}`,
+          icon: "https://todo-frontend-ofl4.onrender.com/logo.png",
+          click_action: "https://todo-frontend-ofl4.onrender.com",
+        },
+      });
+    }
 
     return res.status(200).json({ success: true });
   } catch (error) {
@@ -174,7 +188,6 @@ router.post("/todo/delete", async (req, res) => {
   try {
     const { todo } = req.body;
     if (!todo) return res.send({ success: false });
-    console.log(todo);
     if (todo.image) {
       await utapi.deleteFiles([todo.image.key]);
     }
@@ -201,6 +214,16 @@ router.get("/clean-image", async (req, res) => {
     await Todo.updateMany(matchQuery, { $unset: { image: "" } });
     return res.json({ success: true });
   } catch (error) {
+    return res.status(500).json({ error: error.message });
+  }
+});
+router.post("/add-fcm", async (req, res) => {
+  try {
+    const { token } = req.body;
+    await User.updateOne({ _id: req.user._id }, { $set: { fcmToken: token } });
+    return res.json({ success: true });
+  } catch (error) {
+    console.error(error);
     return res.status(500).json({ error: error.message });
   }
 });

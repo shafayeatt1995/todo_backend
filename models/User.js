@@ -22,6 +22,7 @@ const UserSchema = new Schema(
       enum: userRoles,
       default: "user",
     },
+    fcmToken: { type: String, select: false },
   },
   {
     strict: true,
@@ -31,7 +32,6 @@ const UserSchema = new Schema(
 
 UserSchema.pre("save", function (next) {
   const user = this;
-  console.log(user.isModified("password"));
   if (!user.isModified("password")) return next();
   user.password = bcrypt.hashSync(user.password, 10);
   next();
