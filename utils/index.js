@@ -35,26 +35,43 @@ const paginate = (page, perPage) => {
   return [{ $skip: skip }, { $limit: limit }];
 };
 
-const hasOne = (query, from, as, select = []) => {
-  const $expr = { $eq: ["$_id", `$$${query}`] };
-  const pipeline = [{ $match: { $expr } }];
-  if (select.length) {
-    pipeline.push({
-      $project: Object.fromEntries(select.map((key) => [key, 1])),
-    });
+const hasOne = (localField, fromCollection, asField, select = []) => {
+  const lookupPipeline = [
+    {
+      $match: {
+        $expr: {
+          $eq: ["$_id", `$$${localField}`],
+        },
+      },
+    },
+  ];
+
+  if (select.length > 0) {
+    const project = {};
+    for (const key of select) {
+      project[key] = 1;
+    }
+    lookupPipeline.push({ $project: project });
   }
+
   return [
     {
       $lookup: {
-        from,
-        let: { [query]: `$${query}` },
-        pipeline,
-        as,
+        from: fromCollection,
+        let: { [localField]: `$${localField}` },
+        pipeline: lookupPipeline,
+        as: asField,
       },
     },
     {
       $addFields: {
-        [as]: { $arrayElemAt: [`$${as}`, 0] },
+        [asField]: {
+          $cond: {
+            if: { $gt: [{ $size: `$${asField}` }, 0] },
+            then: { $arrayElemAt: [`$${asField}`, 0] },
+            else: null,
+          },
+        },
       },
     },
   ];

@@ -69,8 +69,13 @@ router.post("/add", todoCreateVal, validation, async (req, res) => {
     }
 
     const { name, _id, businessID } = req.user;
-    const { title, description } = req.body;
-    const payload = { title, description, user: name, businessID };
+    const { title, description, userID } = req.body;
+    const payload = {
+      title: `${userID ? "user " + userID + " - " : ""}${title}`,
+      description,
+      user: name,
+      businessID,
+    };
     if (image) payload.image = image;
     await Todo.create(payload);
 

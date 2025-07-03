@@ -63,11 +63,10 @@ router.post("/delete", async (req, res) => {
 router.post("/add", packageCreateVal, validation, async (req, res) => {
   try {
     const { businessID, name: refName } = req.user;
-    const { name, price, id } = req.body;
+    const { name, price } = req.body;
     await Package.create({
       businessID,
       refName,
-      id,
       name,
       price,
     });
@@ -80,8 +79,8 @@ router.post("/add", packageCreateVal, validation, async (req, res) => {
 router.post("/edit", packageCreateVal, validation, async (req, res) => {
   try {
     const { businessID } = req.user;
-    const { _id, name, price, id } = req.body;
-    await Package.updateOne({ _id, businessID }, { name, price, id });
+    const { _id, name, price } = req.body;
+    await Package.updateOne({ _id, businessID }, { name, price });
 
     return res.send({ success: true });
   } catch (error) {

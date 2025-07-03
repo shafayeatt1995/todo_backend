@@ -1,16 +1,18 @@
 const mongoose = require("mongoose");
 const Schema = mongoose.Schema;
 
-const PackageSchema = new Schema(
+const ContactSchema = new Schema(
   {
     businessID: {
       type: Schema.Types.ObjectId,
       ref: "Business",
       required: true,
     },
-    refName: { type: String, required: true, trim: true },
+    packageID: { type: Schema.Types.ObjectId, ref: "Package" },
+    id: { type: String, required: true, trim: true },
     name: { type: String, required: true, trim: true },
-    price: { type: Number, required: true },
+    phone: { type: String, required: true, trim: true },
+    address: { type: String, required: true, trim: true },
   },
   {
     strict: true,
@@ -18,4 +20,4 @@ const PackageSchema = new Schema(
   }
 );
 
-module.exports = mongoose.model("Package", PackageSchema);
+module.exports = mongoose.model("Contact", ContactSchema);
