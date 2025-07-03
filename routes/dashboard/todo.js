@@ -137,5 +137,18 @@ router.post("/update-status", async (req, res) => {
     return res.status(500).json({ error: error.message });
   }
 });
+router.post("/delete", async (req, res) => {
+  try {
+    const { todo } = req.body;
+    if (todo.image) {
+      await utapi.deleteFiles([todo.image.key]);
+    }
+    await Todo.deleteOne({ _id: todo._id });
+    return res.send({ success: true });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ error: error.message });
+  }
+});
 
 module.exports = router;
