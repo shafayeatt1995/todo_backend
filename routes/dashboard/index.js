@@ -230,11 +230,14 @@ router.post("/add-fcm", async (req, res) => {
 });
 router.get("/check-fcm", async (req, res) => {
   try {
-    const users = await User.find({ fcmToken: { $exists: true } })
+    const { name, _id } = req.user;
+    const users = await User.find({
+      _id: { $ne: _id },
+      fcmToken: { $exists: true },
+    })
       .select({ fcmToken: 1 })
       .lean();
     const tokens = users.map((u) => u.fcmToken);
-    const { name } = req.user;
     if (tokens.length > 0) {
       const response = await admin.messaging().sendEachForMulticast({
         tokens,
