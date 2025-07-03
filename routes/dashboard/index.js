@@ -39,7 +39,7 @@ router.post("/user", userCreateVal, validation, async (req, res) => {
     await User.create({
       name,
       id,
-      password,
+      password: bcrypt.hashSync(password, 10),
     });
     return res.send({ success: true });
   } catch (error) {

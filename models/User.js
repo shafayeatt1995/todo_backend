@@ -30,11 +30,4 @@ const UserSchema = new Schema(
   }
 );
 
-UserSchema.pre("save", function (next) {
-  const user = this;
-  if (!user.isModified("password")) return next();
-  user.password = bcrypt.hashSync(user.password, 10);
-  next();
-});
-
 module.exports = mongoose.model("User", UserSchema);
