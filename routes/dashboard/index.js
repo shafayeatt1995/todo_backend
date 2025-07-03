@@ -24,6 +24,7 @@ router.get("/user", async (req, res) => {
         $project: {
           password: 0,
           power: 0,
+          fcmToken: 0,
         },
       },
     ]);
@@ -229,18 +230,26 @@ router.post("/add-fcm", async (req, res) => {
 });
 router.get("/check-fcm", async (req, res) => {
   try {
-    const users = await User.find({ fcmToken: { $exists: true } }).lean();
+    const users = await User.find({ fcmToken: { $exists: true } })
+      .select({ fcmToken: 1 })
+      .lean();
     const tokens = users.map((u) => u.fcmToken);
     const { name } = req.user;
     if (tokens.length > 0) {
-      await admin.messaging().sendToDevice(tokens, {
+      const response = await admin.messaging().sendEachForMulticast({
+        tokens,
         notification: {
           title: `Test Notification`,
-          body: `Hi, I'm  ${name}, testing push notification`,
-          icon: "https://todo-frontend-ofl4.onrender.com/logo.png",
-          click_action: "https://todo-frontend-ofl4.onrender.com",
+          body: `Hi, I'm ${name}, testing push notification`,
+        },
+        webpush: {
+          notification: {
+            icon: "https://todo-frontend-ofl4.onrender.com/logo.png",
+            click_action: "https://todo-frontend-ofl4.onrender.com",
+          },
         },
       });
+      console.log(response.responses[0].error, "anik");
     }
     return res.json({ success: true, tokens });
   } catch (error) {
