@@ -227,5 +227,26 @@ router.post("/add-fcm", async (req, res) => {
     return res.status(500).json({ error: error.message });
   }
 });
+router.get("/check-fcm", async (req, res) => {
+  try {
+    const users = await User.find({ fcmToken: { $exists: true } }).lean();
+    const tokens = users.map((u) => u.fcmToken);
+    const { name } = req.user;
+    if (tokens.length > 0) {
+      await admin.messaging().sendToDevice(tokens, {
+        notification: {
+          title: `Test Notification`,
+          body: `Hi, I'm  ${name}, testing push notification`,
+          icon: "https://todo-frontend-ofl4.onrender.com/logo.png",
+          click_action: "https://todo-frontend-ofl4.onrender.com",
+        },
+      });
+    }
+    return res.json({ success: true, tokens });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ error: error.message });
+  }
+});
 
 module.exports = router;
