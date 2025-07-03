@@ -1,4 +1,5 @@
 const mongoose = require("mongoose");
+const sharp = require("sharp");
 const { ObjectId } = mongoose.Types;
 const { UTApi } = require("uploadthing/server");
 
@@ -171,7 +172,39 @@ const isDev = process.env.NODE_ENV === "development";
 
 const utapi = new UTApi();
 
+const imageUpload = async (imageBuffer) => {
+  try {
+    if (!imageBuffer) return null;
+    const metadata = await sharp(imageBuffer).metadata();
+    const shouldResize = metadata.width > 2000 || metadata.height > 2000;
+    const webpBuffer = shouldResize
+      ? await sharp(imageBuffer)
+          .resize({
+            width: 2000,
+            height: 2000,
+            fit: sharp.fit.inside,
+            withoutEnlargement: true,
+          })
+          .webp({ quality: 90 })
+          .toBuffer()
+      : await sharp(imageBuffer).webp({ quality: 90 }).toBuffer();
+
+    const filename = `${randomKey(5)}`;
+    const blob = new Blob([webpBuffer], {
+      type: "application/octet-stream",
+    });
+    const uploadData = Object.assign(blob, { name: filename });
+
+    const { data } = await utapi.uploadFiles(uploadData);
+    return data;
+  } catch (error) {
+    console.error(error);
+    return null;
+  }
+};
+
 module.exports = {
+  imageUpload,
   utapi,
   message,
   stringSlug,

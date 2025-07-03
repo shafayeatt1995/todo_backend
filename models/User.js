@@ -5,6 +5,8 @@ const Schema = mongoose.Schema;
 
 const UserSchema = new Schema(
   {
+    businessID: { type: Schema.Types.ObjectId, ref: "Business" },
+    refName: { type: String, required: true, trim: true },
     name: { type: String, required: true, trim: true },
     id: {
       type: String,
@@ -20,14 +22,20 @@ const UserSchema = new Schema(
       type: String,
       required: true,
       enum: userRoles,
-      default: "user",
     },
-    fcmToken: { type: String, select: false },
+    fcmToken: { type: String, default: null },
   },
   {
     strict: true,
     timestamps: { createdAt: "createdAt", updatedAt: "updatedAt" },
   }
 );
+
+UserSchema.pre("save", function (next) {
+  const user = this;
+  if (!user.isModified("password")) return next();
+  user.password = bcrypt.hashSync(user.password, 10);
+  next();
+});
 
 module.exports = mongoose.model("User", UserSchema);

@@ -135,18 +135,25 @@ router.post("/todo", todoCreateVal, validation, async (req, res) => {
     if (image) payload.image = image;
     await Todo.create(payload);
 
-    // 🔔 Send push notification to all users except the sender
-    const users = await User.find({ fcmToken: { $exists: true } }).lean();
-
+    const users = await User.find({
+      _id: { $ne: _id },
+      fcmToken: { $exists: true },
+    })
+      .select({ fcmToken: 1 })
+      .lean();
     const tokens = users.map((u) => u.fcmToken);
-
     if (tokens.length > 0) {
-      await admin.messaging().sendToDevice(tokens, {
+      await admin.messaging().sendEachForMulticast({
+        tokens,
         notification: {
-          title: `🆕 New Todo Added by ${name}`,
-          body: `${title}`,
-          icon: "https://todo-frontend-ofl4.onrender.com/logo.png",
-          click_action: "https://todo-frontend-ofl4.onrender.com",
+          title: `Test Notification`,
+          body: `Hi, I'm ${name}, testing push notification`,
+        },
+        webpush: {
+          notification: {
+            icon: "https://todo-frontend-ofl4.onrender.com/logo.png",
+            click_action: "https://todo-frontend-ofl4.onrender.com",
+          },
         },
       });
     }
@@ -239,7 +246,7 @@ router.get("/check-fcm", async (req, res) => {
       .lean();
     const tokens = users.map((u) => u.fcmToken);
     if (tokens.length > 0) {
-      const response = await admin.messaging().sendEachForMulticast({
+      await admin.messaging().sendEachForMulticast({
         tokens,
         notification: {
           title: `Test Notification`,
@@ -252,7 +259,6 @@ router.get("/check-fcm", async (req, res) => {
           },
         },
       });
-      console.log(response.responses[0].error, "anik");
     }
     return res.json({ success: true, tokens });
   } catch (error) {

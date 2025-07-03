@@ -10,7 +10,8 @@ const isAuthenticated = async (req, res, next) => {
           : null;
 
       const payload = await jwt.verify(token, process.env.AUTH_SECRET);
-      req.user = payload;
+      const { iat, exp, ...cleanPayload } = payload;
+      req.user = cleanPayload;
       next();
     } else {
       throw new Error("Token not found");

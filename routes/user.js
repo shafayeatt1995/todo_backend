@@ -5,11 +5,13 @@ const { User, Business } = require("../models");
 router.get("/", async (req, res) => {
   try {
     const { _id } = req.user;
-    const user = await User.findOne({ _id, suspended: false }).lean();
+    const user = await User.findOne({ _id, suspended: false })
+      .select({ fcmToken: 0 })
+      .lean();
     const body = { user: { ...user, ...req.user } };
     if (user.businessID) {
       const business = await Business.findOne({ _id: user.businessID })
-        .select({ ownerIDs: 0, resellerIDs: 0 })
+        .select({ ownerIDs: 0, staffIDs: 0 })
         .lean();
       body.user.business = business;
     }
