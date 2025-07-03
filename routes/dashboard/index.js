@@ -178,5 +178,24 @@ router.post("/todo/delete", async (req, res) => {
     return res.status(500).json({ error: error.message });
   }
 });
+router.get("/clean-image", async (req, res) => {
+  try {
+    const matchQuery = {
+      createdAt: { $gte: addDate(30, new Date()) },
+      image: { $exists: true },
+    };
+    const todos = await Todo.find(matchQuery).lean();
+    const key = todos
+      .filter((todo) => todo.image?.key || false)
+      .map((todo) => todo.image.key);
+    if (key && key.length) {
+      await utapi.deleteFiles(key);
+    }
+    await Todo.updateMany(matchQuery, { $unset: { image: "" } });
+    return res.json({ success: true });
+  } catch (error) {
+    return res.status(500).json({ error: error.message });
+  }
+});
 
 module.exports = router;
