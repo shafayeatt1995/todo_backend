@@ -3,5 +3,6 @@ module.exports = {
   User: require("./User"),
   Business: require("./Business"),
   Zone: require("./Zone"),
+  SubZone: require("./SubZone"),
   Customer: require("./Customer"),
 };

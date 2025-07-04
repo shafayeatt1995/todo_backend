@@ -3,6 +3,7 @@ const router = express.Router();
 
 router.use("/user", require("./user"));
 router.use("/zone", require("./zone"));
+router.use("/sub-zone", require("./sub-zone"));
 router.use("/todo", require("./todo"));
 router.use("/customer", require("./customer"));
 
