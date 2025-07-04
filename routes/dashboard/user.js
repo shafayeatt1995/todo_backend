@@ -1,7 +1,7 @@
 const express = require("express");
 const mongoose = require("mongoose");
-const { User, Business, Package } = require("../../models");
-const { paginate, sleep, toggle, objectID } = require("../../utils");
+const { User, Business, Zone } = require("../../models");
+const { paginate, toggle, objectID } = require("../../utils");
 const { userCreateVal, userEditVal } = require("../../validation/user");
 const { validation } = require("../../validation");
 const router = express.Router();
@@ -218,11 +218,11 @@ router.post("/update-permission", async (req, res) => {
     return res.status(500).json({ error: error.message });
   }
 });
-router.get("/package", async (req, res) => {
+router.get("/zone", async (req, res) => {
   try {
-    const { _id } = req.user;
-    const packages = await Package.find({ userID: objectID(_id) });
-    return res.send({ packages });
+    const { businessID } = req.user;
+    const zones = await Zone.find({ businessID: objectID(businessID) });
+    return res.send({ zones });
   } catch (error) {
     console.error(error);
     return res.status(500).json({ error: error.message });

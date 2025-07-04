@@ -1,8 +1,8 @@
 const express = require("express");
-const { Package } = require("../../models");
+const { Zone } = require("../../models");
 const { paginate, objectID } = require("../../utils");
 const { validation } = require("../../validation");
-const { packageCreateVal } = require("../../validation/package");
+const { zoneCreateVal } = require("../../validation/zone");
 const router = express.Router();
 
 router.post("/fetch", async (req, res) => {
@@ -18,30 +18,16 @@ router.post("/fetch", async (req, res) => {
       ],
     };
 
-    const [packages, total] = await Promise.all([
-      Package.aggregate([
+    const [zones, total] = await Promise.all([
+      Zone.aggregate([
         { $match: matchQuery },
         { $sort: sort },
         ...paginate(page, perPage),
         { $project: { businessID: 0 } },
       ]),
-      Package.countDocuments(matchQuery),
+      Zone.countDocuments(matchQuery),
     ]);
-    return res.send({ packages, total });
-  } catch (error) {
-    console.error(error);
-    return res.status(500).json({ error: error.message });
-  }
-});
-router.post("/batch-delete", async (req, res) => {
-  try {
-    const { businessID } = req.user;
-    const { ids } = req.body;
-    await Package.deleteMany({
-      _id: { $in: ids },
-      businessID: objectID(businessID),
-    });
-    return res.send({ success: true });
+    return res.send({ zones, total });
   } catch (error) {
     console.error(error);
     return res.status(500).json({ error: error.message });
@@ -49,38 +35,31 @@ router.post("/batch-delete", async (req, res) => {
 });
 router.post("/delete", async (req, res) => {
   try {
-    const { pack } = req.body;
-    await Package.deleteOne({
-      _id: pack._id,
-      businessID: objectID(pack.businessID),
-    });
+    const { businessID } = req.user;
+    const { _id } = req.body;
+    await Zone.deleteOne({ _id, businessID });
     return res.send({ success: true });
   } catch (error) {
     console.error(error);
     return res.status(500).json({ error: error.message });
   }
 });
-router.post("/add", packageCreateVal, validation, async (req, res) => {
-  try {
-    const { businessID, name: refName } = req.user;
-    const { name, price } = req.body;
-    await Package.create({
-      businessID,
-      refName,
-      name,
-      price,
-    });
-    return res.send({ success: true });
-  } catch (error) {
-    console.error(error);
-    return res.status(500).json({ error: error.message });
-  }
-});
-router.post("/edit", packageCreateVal, validation, async (req, res) => {
+router.post("/add", zoneCreateVal, validation, async (req, res) => {
   try {
     const { businessID } = req.user;
-    const { _id, name, price } = req.body;
-    await Package.updateOne({ _id, businessID }, { name, price });
+    const { name } = req.body;
+    await Zone.create({ businessID, name });
+    return res.send({ success: true });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ error: error.message });
+  }
+});
+router.post("/edit", zoneCreateVal, validation, async (req, res) => {
+  try {
+    const { businessID } = req.user;
+    const { _id, name } = req.body;
+    await Zone.updateOne({ _id, businessID }, { name });
 
     return res.send({ success: true });
   } catch (error) {

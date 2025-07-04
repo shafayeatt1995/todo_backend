@@ -1,15 +1,15 @@
 const express = require("express");
-const { Package, Contact } = require("../../models");
+const { Zone, Customer } = require("../../models");
 const { objectID, hasOne, paginate } = require("../../utils");
-const { contactCreateVal } = require("../../validation/contact");
+const { customerCreateVal } = require("../../validation/customer");
 const { validation } = require("../../validation");
 const router = express.Router();
 
-router.get("/package", async (req, res) => {
+router.get("/zone", async (req, res) => {
   try {
     const { businessID } = req.user;
-    const packages = await Package.find({ businessID: objectID(businessID) });
-    return res.json({ packages });
+    const zones = await Zone.find({ businessID: objectID(businessID) });
+    return res.json({ zones });
   } catch (error) {
     console.error(error);
     return res.status(500).json({ error: error.message });
@@ -31,26 +31,26 @@ router.get("/", async (req, res) => {
       ];
     }
 
-    const contacts = await Contact.aggregate([
+    const customers = await Customer.aggregate([
       { $match: matchStage },
       { $sort: { createdAt: -1 } },
       ...paginate(page, perPage),
-      ...hasOne("packageID", "packages", "package", ["name", "price"]),
+      ...hasOne("zoneID", "zones", "zone", ["name"]),
     ]);
 
-    return res.json({ contacts });
+    return res.json({ customers });
   } catch (error) {
     console.error(error);
     return res.status(500).json({ error: error.message });
   }
 });
-router.post("/", contactCreateVal, validation, async (req, res) => {
+router.post("/", customerCreateVal, validation, async (req, res) => {
   try {
     const { businessID } = req.user;
-    const { packageID, id, name, phone, address } = req.body;
-    await Contact.create({
+    const { zoneID, id, name, phone, address } = req.body;
+    await Customer.create({
       businessID,
-      packageID,
+      zoneID,
       id,
       name,
       phone,
@@ -62,13 +62,13 @@ router.post("/", contactCreateVal, validation, async (req, res) => {
     return res.status(500).json({ error: error.message });
   }
 });
-router.put("/", contactCreateVal, validation, async (req, res) => {
+router.put("/", customerCreateVal, validation, async (req, res) => {
   try {
     const { businessID } = req.user;
-    const { _id, packageID, id, name, phone, address } = req.body;
-    await Contact.updateOne(
+    const { _id, zoneID, id, name, phone, address } = req.body;
+    await Customer.updateOne(
       { _id, businessID },
-      { packageID, id, name, phone, address }
+      { zoneID, id, name, phone, address }
     );
     return res.json({ success: true });
   } catch (error) {
@@ -78,10 +78,10 @@ router.put("/", contactCreateVal, validation, async (req, res) => {
 });
 router.post("/delete", async (req, res) => {
   try {
-    const { contact } = req.body;
+    const { customer } = req.body;
     const { businessID } = req.user;
-    await Contact.deleteOne({
-      _id: objectID(contact._id),
+    await Customer.deleteOne({
+      _id: objectID(customer._id),
       businessID: objectID(businessID),
     });
     return res.send({ success: true });

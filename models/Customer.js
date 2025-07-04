@@ -1,14 +1,14 @@
 const mongoose = require("mongoose");
 const Schema = mongoose.Schema;
 
-const ContactSchema = new Schema(
+const CustomerSchema = new Schema(
   {
     businessID: {
       type: Schema.Types.ObjectId,
       ref: "Business",
       required: true,
     },
-    packageID: { type: Schema.Types.ObjectId, ref: "Package" },
+    zoneID: { type: Schema.Types.ObjectId, ref: "zone" },
     id: { type: String, required: true, trim: true },
     name: { type: String, required: true, trim: true },
     phone: { type: String, required: true, trim: true },
@@ -20,4 +20,4 @@ const ContactSchema = new Schema(
   }
 );
 
-module.exports = mongoose.model("Contact", ContactSchema);
+module.exports = mongoose.model("Customer", CustomerSchema);
