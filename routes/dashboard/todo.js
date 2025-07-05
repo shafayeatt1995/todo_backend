@@ -68,15 +68,15 @@ router.post("/add", todoCreateVal, validation, async (req, res) => {
       keyList = key;
     }
 
-    const { name, _id, businessID } = req.user;
-    const { title, description, userID } = req.body;
+    const { _id, businessID } = req.user;
+    const { user, description } = req.body;
     const payload = {
-      title: `${userID ? "user " + userID + " - " : ""}${title}`,
+      user,
       description,
-      user: name,
       businessID,
     };
     if (image) payload.image = image;
+    console.log(payload);
     await Todo.create(payload);
 
     const users = await User.find({
@@ -92,7 +92,10 @@ router.post("/add", todoCreateVal, validation, async (req, res) => {
         tokens,
         notification: {
           title: `New Complain`,
-          body: title,
+          body:
+            description.length > 120
+              ? description.slice(0, 120) + "..."
+              : description,
         },
         webpush: {
           notification: {
@@ -116,8 +119,8 @@ router.post("/add", todoCreateVal, validation, async (req, res) => {
 });
 router.put("/update", todoCreateVal, validation, async (req, res) => {
   try {
-    const { _id, title, description } = req.body;
-    await Todo.updateOne({ _id }, { title, description });
+    const { _id, user, description } = req.body;
+    await Todo.updateOne({ _id }, { user, description });
 
     return res.status(200).json({ success: true });
   } catch (error) {
