@@ -9,7 +9,7 @@ const CustomerSchema = new Schema(
       required: true,
     },
     zoneID: { type: Schema.Types.ObjectId, ref: "zone" },
-    subZoneID: { type: Schema.Types.ObjectId, ref: "subZone" },
+    subZoneID: { type: Schema.Types.Mixed, required: false },
     id: { type: String, required: true, trim: true },
     name: { type: String, required: true, trim: true },
     phone: { type: String, required: true, trim: true },
