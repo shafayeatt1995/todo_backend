@@ -1,5 +1,5 @@
 const express = require("express");
-const { Zone, Customer } = require("../../models");
+const { Zone, Customer, SubZone } = require("../../models");
 const { objectID, hasOne, paginate } = require("../../utils");
 const { customerCreateVal } = require("../../validation/customer");
 const { validation } = require("../../validation");
@@ -10,6 +10,19 @@ router.get("/zone", async (req, res) => {
     const { businessID } = req.user;
     const zones = await Zone.find({ businessID: objectID(businessID) });
     return res.json({ zones });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ error: error.message });
+  }
+});
+router.get("/sub-zone", async (req, res) => {
+  try {
+    const { businessID } = req.user;
+    const { zoneID } = req.query;
+    const matchQuery = { businessID: objectID(businessID) };
+    if (zoneID) matchQuery.zoneID = objectID(zoneID);
+    const subZones = await SubZone.find(matchQuery);
+    return res.json({ subZones });
   } catch (error) {
     console.error(error);
     return res.status(500).json({ error: error.message });
@@ -35,6 +48,7 @@ router.get("/", async (req, res) => {
       { $match: matchStage },
       { $sort: { createdAt: -1 } },
       ...paginate(page, perPage),
+      ...hasOne("subZoneID", "subzones", "subZone", ["name"]),
       ...hasOne("zoneID", "zones", "zone", ["name"]),
     ]);
 
@@ -47,14 +61,16 @@ router.get("/", async (req, res) => {
 router.post("/", customerCreateVal, validation, async (req, res) => {
   try {
     const { businessID } = req.user;
-    const { zoneID, id, name, phone, address } = req.body;
+    const { zoneID, subZoneID, id, name, phone, address, package } = req.body;
     await Customer.create({
       businessID,
       zoneID,
+      subZoneID,
       id,
       name,
       phone,
       address,
+      package,
     });
     return res.json({ success: true });
   } catch (error) {
@@ -65,10 +81,11 @@ router.post("/", customerCreateVal, validation, async (req, res) => {
 router.put("/", customerCreateVal, validation, async (req, res) => {
   try {
     const { businessID } = req.user;
-    const { _id, zoneID, id, name, phone, address } = req.body;
+    const { _id, zoneID, subZoneID, id, name, phone, address, package } =
+      req.body;
     await Customer.updateOne(
       { _id, businessID },
-      { zoneID, id, name, phone, address }
+      { zoneID, subZoneID, id, name, phone, address, package }
     );
     return res.json({ success: true });
   } catch (error) {
