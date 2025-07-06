@@ -3,7 +3,7 @@ const packages = [
   {
     id: "1",
     name: "500 SMS",
-    price: 20,
+    price: 299,
     sms: 500,
     bonus: 0,
   },
