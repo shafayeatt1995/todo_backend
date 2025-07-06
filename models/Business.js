@@ -7,6 +7,7 @@ const BusinessSchema = new Schema(
     name: { type: String, required: true, trim: true },
     ownerIDs: { type: [Schema.Types.ObjectId], default: [], ref: "User" },
     staffIDs: { type: [Schema.Types.ObjectId], default: [], ref: "User" },
+    sms: { type: Number, default: 0 },
     exp: { type: Date, default: () => Date.now() },
     image: { type: Object },
   },

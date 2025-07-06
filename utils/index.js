@@ -157,7 +157,10 @@ const addDate = (count, date = new Date()) => {
 
 const addMonth = (count, date = new Date()) => {
   const d = new Date(date);
+  const isLastDay =
+    new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate() === d.getDate();
   d.setMonth(d.getMonth() + count);
+  if (isLastDay) d.setDate(0);
   return d.toISOString();
 };
 

@@ -2,6 +2,7 @@ const express = require("express");
 const router = express.Router();
 const isAuthenticated = require("../middleware/isAuthenticated");
 const isAdmin = require("../middleware/isAdmin");
+const { Business } = require("../models");
 
 router.get("/anik", async (req, res) => {
   try {
@@ -11,6 +12,7 @@ router.get("/anik", async (req, res) => {
   }
 });
 
+router.use("/webhook", require("./webhook"));
 router.use("/auth", require("./auth"));
 
 router.use(isAuthenticated);
