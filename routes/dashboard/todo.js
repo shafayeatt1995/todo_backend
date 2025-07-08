@@ -76,7 +76,6 @@ router.post("/add", todoCreateVal, validation, async (req, res) => {
       businessID,
     };
     if (image) payload.image = image;
-    console.log(payload);
     await Todo.create(payload);
 
     const users = await User.find({

@@ -8,5 +8,6 @@ router.use("/todo", require("./todo"));
 router.use("/customer", require("./customer"));
 router.use("/sms", require("./sms"));
 router.use("/payment", require("./payment"));
+router.use("/purchase", require("./purchase"));
 
 module.exports = router;
