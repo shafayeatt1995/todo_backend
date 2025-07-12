@@ -16,10 +16,15 @@ router.post("/login", loginValidation, validation, async (req, res) => {
     if (business) {
       payload.businessID = business._id;
       const _idStr = _id.toString();
-      if (business.ownerIDs.some((id) => id.toString() === _idStr))
-        payload.isOwner = true;
-      if (business.staffIDs.some((id) => id.toString() === _idStr))
+      if (business.staffIDs.some((id) => id.toString() === _idStr)) {
         payload.isStaff = true;
+      } else if (business.reSellerIDs.some((id) => id.toString() === _idStr)) {
+        payload.isReSeller = true;
+      } else if (business.sellerIDs.some((id) => id.toString() === _idStr)) {
+        payload.isSeller = true;
+      } else if (business.ownerIDs.some((id) => id.toString() === _idStr)) {
+        payload.isOwner = true;
+      }
     }
 
     const token = jwt.sign(payload, process.env.AUTH_SECRET, {

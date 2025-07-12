@@ -62,16 +62,17 @@ router.post("/", customerCreateVal, validation, async (req, res) => {
   try {
     const { businessID } = req.user;
     const { zoneID, subZoneID, id, name, phone, address, package } = req.body;
-    await Customer.create({
+    const body = {
       businessID,
       zoneID,
-      subZoneID,
       id,
       name,
       phone,
       address,
       package,
-    });
+    };
+    if (subZoneID) body.subZoneID = objectID(subZoneID);
+    await Customer.create(body);
     return res.json({ success: true });
   } catch (error) {
     console.error(error);
@@ -83,10 +84,9 @@ router.put("/", customerCreateVal, validation, async (req, res) => {
     const { businessID } = req.user;
     const { _id, zoneID, subZoneID, id, name, phone, address, package } =
       req.body;
-    await Customer.updateOne(
-      { _id, businessID },
-      { zoneID, subZoneID, id, name, phone, address, package }
-    );
+    const body = { zoneID, id, name, phone, address, package };
+    if (subZoneID) body.subZoneID = subZoneID;
+    await Customer.updateOne({ _id, businessID }, body);
     return res.json({ success: true });
   } catch (error) {
     console.error(error);

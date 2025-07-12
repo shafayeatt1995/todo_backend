@@ -6,6 +6,7 @@ const { Business } = require("../models");
 
 router.get("/anik", async (req, res) => {
   try {
+    await Business.updateMany({}, { $set: { sellerIDs: [], reSellerIDs: [] } });
     return res.send("Hello World!");
   } catch (error) {
     return res.status(500).json({ error: error.message });

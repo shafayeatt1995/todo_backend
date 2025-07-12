@@ -1,4 +1,4 @@
-const userRoles = ["user", "admin", "owner", "staff"];
+const userRoles = ["user", "admin", "owner", "seller", "reseller", "staff"];
 const packages = [
   {
     id: "1",

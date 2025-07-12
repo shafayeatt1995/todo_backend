@@ -19,13 +19,31 @@ router.post("/", async (req, res) => {
           as: "owners",
         },
       };
-    } else {
+    } else if (type === "staff") {
       lookup = {
         $lookup: {
           from: "users",
           localField: "staffIDs",
           foreignField: "_id",
           as: "staffs",
+        },
+      };
+    } else if (type === "seller") {
+      lookup = {
+        $lookup: {
+          from: "users",
+          localField: "sellerIDs",
+          foreignField: "_id",
+          as: "sellers",
+        },
+      };
+    } else if (type === "reSeller") {
+      lookup = {
+        $lookup: {
+          from: "users",
+          localField: "reSellerIDs",
+          foreignField: "_id",
+          as: "reSellers",
         },
       };
     }
@@ -138,8 +156,6 @@ router.get("/search-user", async (req, res) => {
         $match: {
           id: { $regex: id, $options: "i" },
           suspended: false,
-          businessID: { $exists: false },
-          type: { $ne: "admin" },
         },
       },
       { $limit: 30 },
@@ -159,7 +175,7 @@ router.post("/update-user", async (req, res) => {
     const { business, type, users } = req.body;
     if (
       !business?._id ||
-      !["owner", "staff"].includes(type) ||
+      !["owner", "seller", "reSeller", "staff"].includes(type) ||
       !Array.isArray(users)
     ) {
       throw new Error("Invalid request data");
@@ -167,7 +183,13 @@ router.post("/update-user", async (req, res) => {
 
     const userIds = users.map(({ _id }) => objectID(_id));
     const updateField =
-      type === "owner" ? { ownerIDs: userIds } : { staffIDs: userIds };
+      type === "owner"
+        ? { ownerIDs: userIds }
+        : type === "seller"
+        ? { sellerIDs: userIds }
+        : type === "reSeller"
+        ? { reSellerIDs: userIds }
+        : { staffIDs: userIds };
     const userBody = {
       businessID: objectID(business._id),
       type,
